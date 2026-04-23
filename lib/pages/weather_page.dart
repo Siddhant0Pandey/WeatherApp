@@ -71,7 +71,7 @@ class _WeatherPageState extends State<WeatherPage> {
             children: [
               const SizedBox(height: 20),
 
-              // 🔍 Search Bar
+              // Search Bar
               TextField(
                 controller: _controller,
                 style: TextStyle(color: theme.textTheme.bodyLarge?.color),
@@ -110,7 +110,7 @@ class _WeatherPageState extends State<WeatherPage> {
 
               const SizedBox(height: 30),
 
-              // 🔄 Content
+              //  Content
               Expanded(
                 child: Center(
                   child: weatherData == null
@@ -197,7 +197,7 @@ class _WeatherPageState extends State<WeatherPage> {
         ),
       ),
 
-      // 🌙 Floating Theme Toggle Button (BOTTOM RIGHT)
+      //  Floating Theme Toggle Button (BOTTOM RIGHT)
       floatingActionButton: FloatingActionButton(
         elevation: 4,
         backgroundColor: theme.cardColor,
