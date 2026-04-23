@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:weatherapp/main.dart';
 import 'package:weatherapp/models/weather_model.dart';
 import 'package:weatherapp/services/weather_services.dart';
 
@@ -11,149 +12,230 @@ class WeatherPage extends StatefulWidget {
 }
 
 class _WeatherPageState extends State<WeatherPage> {
+  final WeatherService weatherService =
+      WeatherService('99a81e84c186087c9d0581629216328c');
 
-final WeatherService weatherService = WeatherService('99a81e84c186087c9d0581629216328c');
+  WeatherModel? weatherData;
 
-WeatherModel? weatherData;
+  final TextEditingController _controller = TextEditingController();
 
-Future<void> _fetchWeather() async {
-  try {
-    final data = await weatherService.getWeather('Kathmandu');
-    setState(() {
-      weatherData = data;
-    });
-  } catch (e) {
-    print('Error fetching weather: $e');
+  Future<void> _fetchWeather([String? city]) async {
+    try {
+      final data = await weatherService.getWeather(
+        city ?? 'Kathmandu',
+      );
+
+      setState(() {
+        weatherData = data;
+      });
+    } catch (e) {
+      print('Error fetching weather: $e');
+    }
   }
-}
 
-String getWeatherIcon(String condition) {
-  switch (condition.toLowerCase()) {
-    case 'clear':
-      return 'lib/assets/sunny.json';
-    case 'clouds':
-    case 'cloudy':
-    case 'mist':
-    case 'fog':
-      return 'lib/assets/clouds.json';
-    case 'rain':
-      return 'lib/assets/partlyrain.json';
-    case 'snow':
-      return 'lib/assets/partlyrain.json';
-    default:
-      return 'lib/assets/sunny.json';
+  String getWeatherIcon(String condition) {
+    switch (condition.toLowerCase()) {
+      case 'clear':
+        return 'assets/sunny.json';
+      case 'clouds':
+      case 'cloudy':
+      case 'mist':
+      case 'fog':
+        return 'assets/clouds.json';
+      case 'rain':
+        return 'assets/partlyrain.json';
+      case 'snow':
+        return 'assets/snow.json';
+      default:
+        return 'assets/sunny.json';
+    }
   }
-}
 
-@override
-void initState() {
-  super.initState();  
+  @override
+  void initState() {
+    super.initState();
+    _fetchWeather();
+  }
 
-_fetchWeather();
-}
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
 
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
 
- @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    backgroundColor: const Color(0xFFF5F7FA),
-    body: Center(
-      child: weatherData == null
-          ? const CircularProgressIndicator()
-          : Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // City
-                  const Text(
-                    'London',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            children: [
+              const SizedBox(height: 20),
+
+              // 🔍 Search Bar
+              TextField(
+                controller: _controller,
+                style: TextStyle(color: theme.textTheme.bodyLarge?.color),
+                decoration: InputDecoration(
+                  hintText: "Search city...",
+                  hintStyle: TextStyle(
+                    color: theme.textTheme.bodySmall?.color,
                   ),
-
-                  const SizedBox(height: 20),
-
-                  // Weather Animation
-                  Lottie.asset(
-                    getWeatherIcon(weatherData!.mainCondition),
-                    width: 160,
-                    height: 160,
+                  filled: true,
+                  fillColor: theme.cardColor,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide.none,
                   ),
-
-                  const SizedBox(height: 20),
-
-                  // Temperature
-                  Text(
-                    '${weatherData!.temperature.toStringAsFixed(1)}°',
-                    style: const TextStyle(
-                      fontSize: 52,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
+                  suffixIcon: IconButton(
+                    icon: Icon(Icons.search,
+                        color: theme.iconTheme.color),
+                    onPressed: () {
+                      final city = _controller.text.trim();
+                      if (city.isNotEmpty) {
+                        _fetchWeather(city);
+                        _controller.clear();
+                      }
+                    },
                   ),
-
-                  const SizedBox(height: 8),
-
-                  // Description
-                  Text(
-                    weatherData!.mainCondition.toUpperCase(),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      letterSpacing: 1.2,
-                      color: Colors.black54,
-                    ),
-                  ),
-
-                  const SizedBox(height: 30),
-
-                  // Divider for minimal feel
-                  Container(
-                    height: 1,
-                    width: 60,
-                    color: Colors.black12,
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Extra info (optional)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _infoTile("Temp", "${weatherData!.temperature}°C"),
-                      _infoTile("Condition", weatherData!.mainCondition),
-                    ],
-                  ),
-                ],
+                ),
+                onSubmitted: (value) {
+                  if (value.isNotEmpty) {
+                    _fetchWeather(value);
+                    _controller.clear();
+                  }
+                },
               ),
-            ),
-    ),
-  );
-}
 
-// Reusable minimal info widget
-Widget _infoTile(String title, String value) {
-  return Column(
-    children: [
-      Text(
-        title,
-        style: const TextStyle(
-          fontSize: 12,
-          color: Colors.black45,
+              const SizedBox(height: 30),
+
+              // 🔄 Content
+              Expanded(
+                child: Center(
+                  child: weatherData == null
+                      ? const CircularProgressIndicator()
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // City
+                            Text(
+                              weatherData!.cityName,
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.w600,
+                                color: theme.textTheme.bodyLarge?.color,
+                              ),
+                            ),
+
+                            const SizedBox(height: 20),
+
+                            // Animation
+                            Lottie.asset(
+                              getWeatherIcon(
+                                  weatherData!.mainCondition),
+                              width: 160,
+                              height: 160,
+                            ),
+
+                            const SizedBox(height: 20),
+
+                            // Temperature
+                            Text(
+                              '${weatherData!.temperature.toStringAsFixed(1)}°',
+                              style: TextStyle(
+                                fontSize: 52,
+                                fontWeight: FontWeight.bold,
+                                color: theme.textTheme.bodyLarge?.color,
+                              ),
+                            ),
+
+                            const SizedBox(height: 8),
+
+                            // Condition
+                            Text(
+                              weatherData!.mainCondition.toUpperCase(),
+                              style: TextStyle(
+                                fontSize: 16,
+                                letterSpacing: 1.2,
+                                color: theme.textTheme.bodyMedium?.color,
+                              ),
+                            ),
+
+                            const SizedBox(height: 30),
+
+                            Container(
+                              height: 1,
+                              width: 60,
+                              color: theme.dividerColor,
+                            ),
+
+                            const SizedBox(height: 20),
+
+                            Row(
+                              mainAxisAlignment:
+                                  MainAxisAlignment.spaceEvenly,
+                              children: [
+                                _infoTile(
+                                  context,
+                                  "Temp",
+                                  "${weatherData!.temperature}°C",
+                                ),
+                                _infoTile(
+                                  context,
+                                  "Condition",
+                                  weatherData!.mainCondition,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-      const SizedBox(height: 4),
-      Text(
-        value,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
+
+      // 🌙 Floating Theme Toggle Button (BOTTOM RIGHT)
+      floatingActionButton: FloatingActionButton(
+        elevation: 4,
+        backgroundColor: theme.cardColor,
+        onPressed: () {
+          MyApp.of(context).toggleTheme();
+        },
+        child: Icon(
+          MyApp.of(context).isDark
+              ? Icons.light_mode
+              : Icons.dark_mode,
+          color: theme.iconTheme.color,
         ),
       ),
-    ],
-  );
-}
+    );
+  }
+
+  Widget _infoTile(BuildContext context, String title, String value) {
+    final theme = Theme.of(context);
+
+    return Column(
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 12,
+            color: theme.textTheme.bodySmall?.color,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: theme.textTheme.bodyLarge?.color,
+          ),
+        ),
+      ],
+    );
+  }
 }
