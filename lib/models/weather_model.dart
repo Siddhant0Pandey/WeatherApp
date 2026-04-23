@@ -14,5 +14,7 @@ factory WeatherModel.fromJson(Map<String,dynamic> json){
   return WeatherModel(cityName: json['name'], temprature: json['main']['temp'].toDouble(), mainCondition: json['weather'][0]['main']);
 }
 
+  get description => null;
+
 
 }
