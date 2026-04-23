@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'package:weatherapp/models/weather_model.dart';
 import 'package:weatherapp/services/weather_services.dart';
 
@@ -26,6 +27,24 @@ _fetchWeather() async {
   }
 }
 
+String getWeatherIcon(String condition) {
+  switch (condition.toLowerCase()) {
+    case 'clear':
+      return 'assets/sunny.json';
+    case 'clouds':
+    case 'cloudy':
+    case 'mist':
+    case 'fog':
+      return 'assets/clouds.json';
+    case 'rain':
+      return 'assets/partlyrain.json';
+    case 'snow':
+      return 'assets/partlyrain.json';
+    default:
+      return 'assets/sunny.json';
+  }
+}
+
 
 void initState() {
   super.initState();  
@@ -40,6 +59,7 @@ _fetchWeather();
       body: Column(
         children: [
           Text('Weather Page'),
+          Lottie.asset(getWeatherIcon(weatherData?.description ?? 'clear'), width: 200, height: 200),
           if (weatherData != null) ...[
             Text('Temperature: ${weatherData!.temprature}°C'),
             Text('Description: ${weatherData!.description}'),
